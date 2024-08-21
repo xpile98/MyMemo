@@ -1,17 +1,17 @@
+// 전역 변수 선언
+let isResizing = false;
+let isDraggingCanvas = false;
+let isContextMenuOpen = false;
+let activeMemo = null;
+let lastX = 0;
+let lastY = 0;
+let scale = 1;
+let memoOffsetX = 0;
+let memoOffsetY = 0;
+let highestZIndex = 1;
+let lowestZIndex = 1;
+
 document.addEventListener('DOMContentLoaded', (event) => {
-    // 전역 변수 선언
-    let isResizing = false;
-    let isDraggingCanvas = false;
-    let isContextMenuOpen = false;
-    let activeMemo = null;
-    let lastX = 0;
-    let lastY = 0;
-    let scale = 1;
-    let memoOffsetX = 0;
-    let memoOffsetY = 0;
-    let highestZIndex = 1;
-    let lowestZIndex = 1;
-    
     const exportButton = document.getElementById('exportButton');
     const importButton = document.getElementById('importButton');
     const importFileInput = document.getElementById('importFileInput');
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     } else {
         console.error("Element with ID 'importFileInput' not found.");
     }
- 
+
     if (canvas) {
         canvas.addEventListener('mousedown', function(e) {
             if (e.button === 0) {
@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     } else {
         console.error("Element with ID 'menu' not found.");
     }
+    
 
     function handleDoubleClick(e) {
         if (e.target === canvasContent) {
