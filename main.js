@@ -1,7 +1,4 @@
-
 document.addEventListener('DOMContentLoaded', (event) => {
-
-    // 필요한 DOM 요소들을 가져옵니다.
     const exportButton = document.getElementById('exportButton');
     const importButton = document.getElementById('importButton');
     const importFileInput = document.getElementById('importFileInput');
@@ -10,49 +7,64 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const menuIcon = document.getElementById('menu-icon');
     const menu = document.getElementById('menu');
 
-    let isResizing = false;
-    let isDraggingCanvas = false;
-    let isContextMenuOpen = false;
-    let activeMemo = null;
-    let lastX = 0;
-    let lastY = 0;
-    let scale = 1;
-    let memoOffsetX = 0;
-    let memoOffsetY = 0;
-    let highestZIndex = 1;
-    let lowestZIndex = 1;
+    if (exportButton) {
+        exportButton.addEventListener('click', exportMemos);
+    } else {
+        console.error("Element with ID 'exportButton' not found.");
+    }
 
-    // 이벤트 리스너 추가
-    exportButton.addEventListener('click', exportMemos);
-    importButton.addEventListener('click', () => importFileInput.click());
-    importFileInput.addEventListener('change', importMemos);
-    document.getElementById('background-selector').addEventListener('change', function () {
-        changeBackground(this.value);
-    });
-    document.getElementById('canvas-size-selector').addEventListener('change', function () {
-        setCanvasSize(this.value);
-    });
-    document.getElementById('canvas-orientation-selector').addEventListener('change', function () {
-        setCanvasOrientation(this.value);
-    });
-    document.getElementById('applySizeButton').addEventListener('click', resizeCanvas);
+    if (importButton) {
+        importButton.addEventListener('click', () => importFileInput.click());
+    } else {
+        console.error("Element with ID 'importButton' not found.");
+    }
 
-    canvas.addEventListener('mousedown', function(e) {
-        if (e.button === 0) {
-            startDraggingCanvas(e);
-        }
-    });
-    canvas.addEventListener('mousemove', drag);
-    canvas.addEventListener('mouseup', stopDragging);
-    canvas.addEventListener('mouseleave', stopDragging);
-    canvas.addEventListener('wheel', zoom);
-    canvasContent.addEventListener('dblclick', handleDoubleClick);
-    menuIcon.addEventListener('click', toggleMenu);
+    if (importFileInput) {
+        importFileInput.addEventListener('change', importMemos);
+    } else {
+        console.error("Element with ID 'importFileInput' not found.");
+    }
 
-    document.addEventListener('contextmenu', handleContextMenu);
-    document.getElementById('bring-to-front').addEventListener('click', bringToFront);
-    document.getElementById('send-to-back').addEventListener('click', sendToBack);
-    document.addEventListener('click', handleDocumentClick);
+    if (canvas) {
+        canvas.addEventListener('mousedown', function(e) {
+            if (e.button === 0) {
+                startDraggingCanvas(e);
+            }
+        });
+        canvas.addEventListener('mousemove', drag);
+        canvas.addEventListener('mouseup', stopDragging);
+        canvas.addEventListener('mouseleave', stopDragging);
+        canvas.addEventListener('wheel', zoom);
+    } else {
+        console.error("Element with ID 'canvas' not found.");
+    }
+
+    if (canvasContent) {
+        canvasContent.addEventListener('dblclick', handleDoubleClick);
+    } else {
+        console.error("Element with ID 'canvas-content' not found.");
+    }
+
+    if (menuIcon) {
+        menuIcon.addEventListener('click', toggleMenu);
+    } else {
+        console.error("Element with ID 'menu-icon' not found.");
+    }
+
+    if (menu) {
+        document.getElementById('background-selector').addEventListener('change', function () {
+            changeBackground(this.value);
+        });
+        document.getElementById('canvas-size-selector').addEventListener('change', function () {
+            setCanvasSize(this.value);
+        });
+        document.getElementById('canvas-orientation-selector').addEventListener('change', function () {
+            setCanvasOrientation(this.value);
+        });
+        document.getElementById('applySizeButton').addEventListener('click', resizeCanvas);
+    } else {
+        console.error("Element with ID 'menu' not found.");
+    }
 
     function handleDoubleClick(e) {
         if (e.target === canvasContent) {
