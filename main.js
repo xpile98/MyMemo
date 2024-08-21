@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     } else {
         console.error("Element with ID 'importFileInput' not found.");
     }
-
+ 
     if (canvas) {
         canvas.addEventListener('mousedown', function(e) {
             if (e.button === 0) {
