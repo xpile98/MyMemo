@@ -78,6 +78,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
     } else {
         console.error("Element with ID 'menu' not found.");
     }
+
+    // 함수들을 전역 스코프에 노출
+    window.changeColor = changeColor;
+    window.handleImageUpload = handleImageUpload;
+    window.deleteMemo = deleteMemo;
     
 
     function handleDoubleClick(e) {
