@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" , href="style.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Infinite Canvas with Movable Memo</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js"></script>
     <script type="module" src="main.js"></script>
 </head>
@@ -20,7 +20,7 @@
     <div id="menu">
         <h3>Canvas Settings</h3>
         <label for="background-selector">Background:</label>
-        <select id="background-selector" onchange="changeBackground(this.value)">
+        <select id="background-selector">
             <option value="none">None</option>
             <option value="grid">Grid</option>
             <option value="dot">Dot</option>
@@ -28,7 +28,7 @@
         </select>
         <br><br>
         <label for="canvas-size-selector">Canvas Size:</label>
-        <select id="canvas-size-selector" onchange="setCanvasSize(this.value)">
+        <select id="canvas-size-selector">
             <option value="custom">Custom</option>
             <option value="A3">A3 (297mm x 420mm)</option>
             <option value="A4">A4 (210mm x 297mm)</option>
@@ -45,21 +45,17 @@
         <br>
         <br>
         <label for="canvas-orientation-selector">Orientation:</label>
-        <select id="canvas-orientation-selector" onchange="setCanvasOrientation(this.value)">
+        <select id="canvas-orientation-selector">
             <option value="portrait">Portrait (세로모드)</option>
             <option value="landscape">Landscape (가로모드)</option>
         </select>
-
         <br><br>
-        <button onclick="resizeCanvas()">Apply Custom Size</button>
-
+        <button id="applySizeButton">Apply Custom Size</button>
         <br><br>
         <h3>Export / Import</h3>
-        <button onclick="exportMemos()">Export to .memo</button>
-        <input type="file" id="importFileInput" accept=".memo" onchange="importMemos(event)" style="display: none;">
-        <button onclick="document.getElementById('importFileInput').click()">Import from .memo</button>
+        <button id="exportButton">Export to .memo</button>
+        <input type="file" id="importFileInput" accept=".memo" style="display: none;">
+        <button id="importButton">Import from .memo</button>
     </div>
-
-
 </body>
 </html>

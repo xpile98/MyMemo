@@ -1,23 +1,31 @@
 
 document.addEventListener('DOMContentLoaded', (event) => {
 
-
+    // Canvas 관련 기능
     document.getElementById('background-selector').addEventListener('change', function() {
         changeBackground(this.value);
     });
+
     document.getElementById('canvas-size-selector').addEventListener('change', function() {
         setCanvasSize(this.value);
     });
+
     document.getElementById('canvas-orientation-selector').addEventListener('change', function() {
         setCanvasOrientation(this.value);
     });
+
+    document.getElementById('applySizeButton').addEventListener('click', function() {
+        resizeCanvas();
+    });
+
+    // Export / Import 관련 기능
     document.getElementById('exportButton').addEventListener('click', exportMemos);
+
     document.getElementById('importButton').addEventListener('click', function() {
         document.getElementById('importFileInput').click();
     });
+
     document.getElementById('importFileInput').addEventListener('change', importMemos);
-
-
     
     const canvas = document.getElementById('canvas');
     const canvasContent = document.getElementById('canvas-content');
