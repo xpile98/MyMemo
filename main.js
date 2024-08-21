@@ -1,32 +1,10 @@
 
 document.addEventListener('DOMContentLoaded', (event) => {
 
-    // Canvas 관련 기능
-    document.getElementById('background-selector').addEventListener('change', function() {
-        changeBackground(this.value);
-    });
-
-    document.getElementById('canvas-size-selector').addEventListener('change', function() {
-        setCanvasSize(this.value);
-    });
-
-    document.getElementById('canvas-orientation-selector').addEventListener('change', function() {
-        setCanvasOrientation(this.value);
-    });
-
-    document.getElementById('applySizeButton').addEventListener('click', function() {
-        resizeCanvas();
-    });
-
-    // Export / Import 관련 기능
-    document.getElementById('exportButton').addEventListener('click', exportMemos);
-
-    document.getElementById('importButton').addEventListener('click', function() {
-        document.getElementById('importFileInput').click();
-    });
-
-    document.getElementById('importFileInput').addEventListener('change', importMemos);
-    
+    // 필요한 DOM 요소들을 가져옵니다.
+    const exportButton = document.getElementById('exportButton');
+    const importButton = document.getElementById('importButton');
+    const importFileInput = document.getElementById('importFileInput');
     const canvas = document.getElementById('canvas');
     const canvasContent = document.getElementById('canvas-content');
     const menuIcon = document.getElementById('menu-icon');
@@ -44,25 +22,37 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let highestZIndex = 1;
     let lowestZIndex = 1;
 
-    // Canvas panning
+    // 이벤트 리스너 추가
+    exportButton.addEventListener('click', exportMemos);
+    importButton.addEventListener('click', () => importFileInput.click());
+    importFileInput.addEventListener('change', importMemos);
+    document.getElementById('background-selector').addEventListener('change', function () {
+        changeBackground(this.value);
+    });
+    document.getElementById('canvas-size-selector').addEventListener('change', function () {
+        setCanvasSize(this.value);
+    });
+    document.getElementById('canvas-orientation-selector').addEventListener('change', function () {
+        setCanvasOrientation(this.value);
+    });
+    document.getElementById('applySizeButton').addEventListener('click', resizeCanvas);
+
     canvas.addEventListener('mousedown', function(e) {
-        if (e.button === 0) { // 왼쪽 마우스 버튼에 한정
+        if (e.button === 0) {
             startDraggingCanvas(e);
         }
     });
-    canvas.addEventListener('mousedown', startDraggingCanvas);
     canvas.addEventListener('mousemove', drag);
     canvas.addEventListener('mouseup', stopDragging);
     canvas.addEventListener('mouseleave', stopDragging);
-
-    // Zooming
     canvas.addEventListener('wheel', zoom);
-
-    // Double click to create memo (using event delegation)
     canvasContent.addEventListener('dblclick', handleDoubleClick);
-
-    // Menu toggle
     menuIcon.addEventListener('click', toggleMenu);
+
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.getElementById('bring-to-front').addEventListener('click', bringToFront);
+    document.getElementById('send-to-back').addEventListener('click', sendToBack);
+    document.addEventListener('click', handleDocumentClick);
 
     function handleDoubleClick(e) {
         if (e.target === canvasContent) {
