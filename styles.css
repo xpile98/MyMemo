@@ -1,0 +1,128 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #f0f0f0;
+}
+#canvas {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+#canvas-content {
+    position: absolute;
+    transform-origin: 0 0;
+    background-color: white;
+    opacity: 0.8; /* Background transparency set to 0.8 */
+}
+.memo-wrapper {
+    position: absolute;
+}
+.memo {
+    width: 200px;
+    height: 200px;
+    background-color: #ffff99; /* Default memo color changed to yellow */
+    padding: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+    cursor: move;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.memo-icons {
+    position: absolute;
+    top: -30px;
+    right: 0px; /* right 속성을 사용하여 오른쪽에 위치 */
+    display: none;
+    justify-content: center;
+    gap: 5px;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 5px;
+    border-radius: 5px;
+    z-index: 1000;
+    white-space: nowrap; /* Prevent icons from wrapping */
+}
+.memo-wrapper:hover .memo-icons,
+.memo-wrapper:hover .resize-handle {
+    display: flex;
+}
+.color-icon {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+.icon {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.resize-handle {
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+    cursor: nwse-resize;
+    width: 20px;
+    height: 20px;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+}
+.memo-content {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background-color: transparent;
+    resize: none;
+    cursor: move;
+}
+
+.memo-content:not([readonly]) {
+    cursor: text;
+}
+.image-container {
+    width: 100%;
+    height: 100%;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+.image-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+#menu-icon {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1001;
+    cursor: pointer;
+    font-size: 24px;
+}
+#menu {
+    position: fixed;
+    top: 40px;
+    right: 10px;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    display: none;
+    z-index: 1001;
+}
+#context-menu div {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+#context-menu div:hover {
+    background-color: #eee;
+}
