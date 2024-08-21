@@ -580,26 +580,31 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     }
 
-    function importMemos() {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const encodedData = e.target.result;
-                try {
-                    const savedMemos = decodeAndDecompress(encodedData);
-                    localStorage.setItem('memos', JSON.stringify(savedMemos));
-                    loadMemos();
-                    alert('Memo data has been imported successfully.');
-                } catch (error) {
-                    console.error("Failed to import memo data:", error);
-                    alert('Failed to import memo data. Please check the input data.');
-                }
-            };
-            reader.readAsText(file);
+    function importMemos(event) {
+        const file = event.target.files && event.target.files[0];
+        
+        if (!file) {
+            console.error("No file selected or file input is invalid.");
+            alert("Please select a valid .memo file to import.");
+            return;
         }
+    
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const encodedData = e.target.result;
+            try {
+                const savedMemos = decodeAndDecompress(encodedData);
+                localStorage.setItem('memos', JSON.stringify(savedMemos));
+                loadMemos();
+                alert('Memo data has been imported successfully.');
+            } catch (error) {
+                console.error("Failed to import memo data:", error);
+                alert('Failed to import memo data. Please check the input data.');
+            }
+        };
+        reader.readAsText(file);
     }
-
+    
     function loadCanvasSettings() {
         const savedSettings = JSON.parse(localStorage.getItem('canvasSettings'));
         if (savedSettings) {
