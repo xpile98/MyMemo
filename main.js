@@ -83,12 +83,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
     window.changeColor = changeColor;
     window.handleImageUpload = handleImageUpload;
     window.deleteMemo = deleteMemo;
-    
+
+    createFloatingBar();
+
     function createFloatingBar() {
         const floatingBar = document.createElement('div');
         floatingBar.id = 'floating-bar';
         floatingBar.style.position = 'absolute';
         floatingBar.style.display = 'none';
+        floatingBar.style.zIndex = '10000'; // 다른 요소보다 앞에 표시되도록 설정
         floatingBar.innerHTML = `
             <select id="font-select">
                 <option value="Arial">Arial</option>
@@ -104,9 +107,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
         
         document.addEventListener('mouseup', (e) => {
             const selectedText = window.getSelection().toString();
-            if (selectedText.length > 0) {
-                floatingBar.style.top = `${e.pageY - 50}px`;
-                floatingBar.style.left = `${e.pageX}px`;
+            const memoContent = e.target.closest('.memo-content');
+            if (selectedText.length > 0 && memoContent) {
+                const rect = window.getSelection().getRangeAt(0).getBoundingClientRect();
+                floatingBar.style.top = `${rect.top + window.scrollY - floatingBar.offsetHeight - 10}px`;
+                floatingBar.style.left = `${rect.left + window.scrollX}px`;
                 floatingBar.style.display = 'block';
             } else {
                 floatingBar.style.display = 'none';
@@ -133,8 +138,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
             document.execCommand('strikeThrough');
         });
     }
-    
-    document.addEventListener('DOMContentLoaded', createFloatingBar);
 
     function handleDoubleClick(e) {
         if (e.target === canvasContent) {
@@ -191,18 +194,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
         memoContent.addEventListener('dblclick', enableEditMode);
         memoContent.addEventListener('blur', disableEditMode);
 
-        document.addEventListener('wheel', function(e) {
+        memoContent.addEventListener('wheel', function(e) {
             if (e.ctrlKey) {
                 e.preventDefault();
-                const memoContent = document.querySelector('.memo-content:focus');
-                if (memoContent) {
-                    const currentSize = parseInt(window.getComputedStyle(memoContent).fontSize);
-                    const newSize = e.deltaY < 0 ? currentSize + 1 : currentSize - 1;
-                    memoContent.style.fontSize = `${newSize}px`;
-                }
+                const currentSize = parseInt(window.getComputedStyle(memoContent).fontSize);
+                const newSize = e.deltaY < 0 ? currentSize + 1 : currentSize - 1;
+                memoContent.style.fontSize = `${newSize}px`;
             }
         });
-        
 
         saveMemos();
     }
@@ -224,7 +223,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             lastY = e.clientY;
         }
     }
-
+    
     function startDraggingMemo(e) {
         // 우클릭 중에는 드래그 시작을 무시
         if (isContextMenuOpen) {
@@ -280,7 +279,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     function zoom(e) {
         e.preventDefault();
-        
+
         if (e.ctrlKey)
             return
         
