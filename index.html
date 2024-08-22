@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Infinite Canvas with Movable Memo</title>
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js"></script>
-    <script type="module" src="./main.js"></script>
+    <script src="main.js"></script>
 </head>
 <body>
     <div id="context-menu" style="display: none; position: absolute; z-index: 10000; background-color: white; border: 1px solid #ccc; padding: 10px; box-shadow: 0px 0px 5px rgba(0,0,0,0.2);">
@@ -52,10 +52,12 @@
         <br><br>
         <button id="applySizeButton">Apply Custom Size</button>
         <br><br>
-        <h3>Export / Import</h3>
+        <h3>Data</h3>
         <button id="exportButton">Export to .memo</button>
         <input type="file" id="importFileInput" accept=".memo" style="display: none;">
         <button id="importButton">Import from .memo</button>
+        <br>
+        <button id="resetMemosButton">Reset All Memos</button>
     </div>
 </body>
 </html>

@@ -19,8 +19,26 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const canvasContent = document.getElementById('canvas-content');
     const menuIcon = document.getElementById('menu-icon');
     const menu = document.getElementById('menu');
+    const resetMemosButton = document.getElementById('resetMemosButton');
+    
 
-    createFloatingBar();
+    createFloatingBar();   
+    loadMemos();
+    loadCanvasSettings();
+
+    // Reset All Memos 버튼 이벤트 리스너 추가
+    document.addEventListener('keydown', function(e) {
+        const activeElement = document.activeElement;
+        if (activeElement && activeElement.classList.contains('memo-content') && !activeElement.readOnly) {
+            if (e.ctrlKey && e.key.toLowerCase() === 't') {
+                e.preventDefault();
+                document.execCommand('strikeThrough');
+            } else if (e.ctrlKey && e.key.toLowerCase() === 'b') {
+                e.preventDefault();
+                document.execCommand('bold');
+            }
+        }
+    });
 
     if (exportButton) {
         exportButton.addEventListener('click', exportMemos);
@@ -40,9 +58,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 startDraggingCanvas(e);
             }
         });
-        canvas.addEventListener('mousemove', drag);
-        canvas.addEventListener('mouseup', stopDragging);
-        canvas.addEventListener('mouseleave', stopDragging);
+        canvas.addEventListener('mousemove', dragCanvas);
+        canvas.addEventListener('mouseup', stopDraggingCanvas);
+        canvas.addEventListener('mouseleave', stopDraggingCanvas);
         canvas.addEventListener('wheel', zoom);
     }
 
@@ -67,6 +85,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
         document.getElementById('applySizeButton').addEventListener('click', resizeCanvas);
     }
 
+    if (resetMemosButton) {
+        resetMemosButton.addEventListener('click', resetAllMemos);
+    }
+
+
     // 함수들을 전역 스코프에 노출
     window.changeColor = changeColor;
     window.handleImageUpload = handleImageUpload;
@@ -77,7 +100,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         floatingBar.id = 'floating-bar';
         floatingBar.style.position = 'absolute';
         floatingBar.style.display = 'none';
-        floatingBar.style.zIndex = '10000'; // 다른 요소보다 앞에 표시되도록 설정
+        floatingBar.style.zIndex = '10000';
         floatingBar.innerHTML = `
             <select id="font-select">
                 <option value="Arial">Arial</option>
@@ -92,57 +115,84 @@ document.addEventListener('DOMContentLoaded', (event) => {
         document.body.appendChild(floatingBar);
         
         document.addEventListener('mouseup', (e) => {
-            const selectedText = window.getSelection().toString();
-            const memoContent = e.target.closest('.memo-content');
-            if (selectedText.length > 0 && memoContent) {
-                const rect = window.getSelection().getRangeAt(0).getBoundingClientRect();
-                floatingBar.style.top = `${rect.bottom + window.scrollY + 5}px`;
-                floatingBar.style.left = `${rect.left + window.scrollX}px`;
-                floatingBar.style.display = 'block';
-            } else {
-                floatingBar.style.display = 'none';
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                const memoContent = e.target.closest('.memo-content');
+    
+                if (memoContent && !memoContent.readOnly && selection.toString().length > 0) {
+                    const memoRect = memoContent.getBoundingClientRect();
+                    floatingBar.style.top = `${rect.bottom + window.scrollY}px`;
+                    floatingBar.style.left = `${rect.left + window.scrollX}px`;
+                    floatingBar.style.display = 'block';
+                } else {
+                    floatingBar.style.display = 'none';
+                }
             }
         });
-
+    
         document.getElementById('font-select').addEventListener('change', function() {
-            document.execCommand('fontName', false, this.value);
+            applyStyle('font-family', this.value);
         });
-        
+    
         document.getElementById('color-picker').addEventListener('change', function() {
-            document.execCommand('foreColor', false, this.value);
+            applyStyle('color', this.value);
         });
-        
+    
         document.getElementById('highlight-picker').addEventListener('change', function() {
-            document.execCommand('backColor', false, this.value);
+            applyStyle('background-color', this.value);
         });
-        
+    
         document.getElementById('bold-btn').addEventListener('click', function() {
             document.execCommand('bold');
         });
-        
+    
         document.getElementById('strike-btn').addEventListener('click', function() {
             document.execCommand('strikeThrough');
         });
     }
 
-    function handleDoubleClick(e) {
-        if (e.target === canvasContent) {
-            createMemo(e);
-        }
+    function applyStyle(styleName, value) {
+        document.execCommand('styleWithCSS', false, true);
+        document.execCommand('foreColor', false, value);
     }
 
-    function createMemo(e) {
-        const canvasRect = canvas.getBoundingClientRect();
-        const canvasTransform = new DOMMatrix(getComputedStyle(canvasContent).transform);
-        const x = (e.clientX - canvasRect.left - canvasTransform.e) / scale;
-        const y = (e.clientY - canvasRect.top - canvasTransform.f) / scale;
+    function handleDoubleClick(e) {
+        if (e.target === canvasContent) {
+            const canvasRect = canvas.getBoundingClientRect();
+            const canvasTransform = new DOMMatrix(getComputedStyle(canvasContent).transform);
+            const x = (e.clientX - canvasRect.left - canvasTransform.e) / scale;
+            const y = (e.clientY - canvasRect.top - canvasTransform.f) / scale;
+            createMemo(x, y);
+            saveMemos();
+        }
+    }
+    
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    function createMemo(x, y, memoData = null) {
+        if (memoData && memoData.id) {
+            let existingMemo = document.getElementById(`memo-${memoData.id}`);
+            if (existingMemo) {
+                console.log(`Memo with id ${memoData.id} already exists. Skipping creation.`);
+                return existingMemo;
+            }
+        }
 
         const memoWrapper = document.createElement('div');
         memoWrapper.className = 'memo-wrapper';
         memoWrapper.style.left = `${x}px`;
         memoWrapper.style.top = `${y}px`;
-
-        const memoId = Date.now();
+    
+        const memoId = memoData ? memoData.id : generateUUID();
+        memoWrapper.id = `memo-${memoId}`;
+    
         memoWrapper.innerHTML = `
             <div class="memo-icons">
                 <div class="color-icon" style="background-color: #ffff99;" onclick="changeColor(this, '#ffff99')"></div>
@@ -155,48 +205,89 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 <input id="image-upload-${memoId}" type="file" accept="image/*" style="display: none;" onchange="handleImageUpload(this)">
                 <div class="icon" onclick="deleteMemo(this)">✖️</div>
             </div>
-            <div class="memo">
-                <div class="memo-content" contenteditable="true"></div>
-                <div class="image-container">
+            <div class="memo" style="width: ${memoData ? memoData.width : '200px'}; height: ${memoData ? memoData.height : '150px'}; background-color: ${memoData ? memoData.backgroundColor : '#ffff99'};">
+                <textarea class="memo-content" ${memoData ? '' : 'readonly'}>${memoData ? memoData.content : ''}</textarea>
+                <div class="image-container" style="display: none;">
                     <img src="" alt="Uploaded image">
                 </div>
             </div>
             <div class="resize-handle">⤡</div>
         `;
-
+    
         canvasContent.appendChild(memoWrapper);
+    
+        if (memoData && memoData.imageSrc) {
+            const imageContainer = memoWrapper.querySelector('.image-container');
+            const uploadedImage = imageContainer.querySelector('img');
+            uploadedImage.src = memoData.imageSrc;
+            imageContainer.style.display = 'flex';
+            memoWrapper.querySelector('.memo-content').style.display = 'none';
+        }
+    
+        addMemoEventListeners(memoWrapper);
+        addDragListeners(memoWrapper);
 
-        const memo = memoWrapper.querySelector('.memo');
-        memo.addEventListener('mousedown', function(e) {
-            if (e.button === 0) { // 왼쪽 마우스 버튼 클릭일 때만
-                startDraggingMemo(e);
-            }
-        });
-
-        const resizeHandle = memoWrapper.querySelector('.resize-handle');
-        resizeHandle.addEventListener('mousedown', startResizing);
-        
-        const memoContent = memoWrapper.querySelector('.memo-content');
-        memoContent.addEventListener('dblclick', enableEditMode);
-        memoContent.addEventListener('blur', disableEditMode);
-
-        memoContent.addEventListener('wheel', function(e) {
-            if (e.ctrlKey) {
-                e.preventDefault();
-                const currentSize = parseInt(window.getComputedStyle(memoContent).fontSize);
-                const newSize = e.deltaY < 0 ? currentSize + 1 : currentSize - 1;
-                memoContent.style.fontSize = `${newSize}px`;
-            }
-        });
-
-        saveMemos();
+        return memoWrapper;
     }
 
+    // 메모 이벤트 리스너 추가 함수
+    function addMemoEventListeners(memoWrapper) {
+        const memoContent = memoWrapper.querySelector('.memo-content');
+        const memo = memoWrapper.querySelector('.memo');
+        let imageContainer = memoWrapper.querySelector('.image-container');
+    
+        memoWrapper.addEventListener('mouseenter', () => {
+            memoWrapper.querySelector('.memo-icons').style.display = 'flex';
+            memoWrapper.querySelector('.resize-handle').style.display = 'flex';
+        });
+    
+        memoWrapper.addEventListener('mouseleave', () => {
+            memoWrapper.querySelector('.memo-icons').style.display = 'none';
+            memoWrapper.querySelector('.resize-handle').style.display = 'none';
+        });
+    
+        memoWrapper.querySelector('.resize-handle').addEventListener('mousedown', startResizing);
+        memoContent.addEventListener('dblclick', enableEditMode);
+        memoContent.addEventListener('blur', disableEditMode);
+        memoContent.addEventListener('input', saveMemos);
+    
+        // 이미지 컨테이너에 대한 이벤트 리스너 추가 (존재할 경우에만)
+        if (imageContainer) {
+            let img = imageContainer.querySelector('img');
+            if (img) {
+                img.draggable = false; // 이미지 드래그 방지
+                img.addEventListener('mousedown', (e) => {
+                    e.preventDefault(); // 이미지 선택 방지
+                });
+            }
+        }
+    
+        // 메모 전체에 대한 mousedown 이벤트 리스너 추가
+        memoWrapper.addEventListener('mousedown', startDraggingMemo);
+    }
+    
+
     function enableEditMode(e) {
-        e.target.focus();
+        const memoContent = e.target;
+        memoContent.readOnly = false;
+        memoContent.focus();
+        
+        // 커서를 클릭한 위치로 이동
+        const x = e.clientX - memoContent.getBoundingClientRect().left;
+        const y = e.clientY - memoContent.getBoundingClientRect().top;
+        const position = document.caretPositionFromPoint(x, y);
+        if (position) {
+            const range = document.createRange();
+            range.setStart(position.offsetNode, position.offset);
+            range.collapse(true);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
     }
 
     function disableEditMode(e) {
+        e.target.readOnly = true;
         saveMemos();
     }
 
@@ -207,35 +298,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
             lastY = e.clientY;
         }
     }
-    
-    function startDraggingMemo(e) {
-        // 우클릭 중에는 드래그 시작을 무시
-        if (isContextMenuOpen) {
-            return;
-        }
 
-        const memoWrapper = e.target.closest('.memo-wrapper');
-        const memoContent = memoWrapper.querySelector('.memo-content');
-
-        // 텍스트가 편집 모드인지 확인
-        if (memoContent && !memoContent.readOnly) {
-            // 편집 모드라면 이동하지 않도록 함수 종료
-            return;
-        }
-
-        if (memoWrapper && e.target !== memoWrapper.querySelector('.resize-handle') && 
-            !e.target.closest('.memo-icons')) {
-            activeMemo = memoWrapper;
-            const canvasRect = canvas.getBoundingClientRect();
-            const memoRect = memoWrapper.getBoundingClientRect();
-            memoOffsetX = (e.clientX - memoRect.left) / scale;
-            memoOffsetY = (e.clientY - memoRect.top) / scale;
-            e.preventDefault();
-        }
-    }
-
-
-    function drag(e) {
+    function dragCanvas(e) {
         if (isDraggingCanvas) {
             const dx = e.clientX - lastX;
             const dy = e.clientY - lastY;
@@ -243,7 +307,53 @@ document.addEventListener('DOMContentLoaded', (event) => {
             canvasContent.style.transform = currentTransform.translate(dx / scale, dy / scale).toString();
             lastX = e.clientX;
             lastY = e.clientY;
-        } else if (activeMemo && !isContextMenuOpen) {
+        }
+    }
+    
+    function stopDraggingCanvas() {
+        isDraggingCanvas = false;
+    }
+    
+    function startDraggingMemo(e) {
+        if (isContextMenuOpen) {
+            return;
+        }
+    
+        const memoWrapper = e.target.closest('.memo-wrapper');
+        if (!memoWrapper) return;
+    
+        const memoContent = memoWrapper.querySelector('.memo-content');
+    
+        // 텍스트 영역을 클릭했을 때 편집 모드로 전환
+        if (e.target === memoContent) {
+            enableEditMode(e);
+            return;
+        }
+    
+        // 이미 편집 모드인 경우 드래그하지 않음
+        if (memoContent && !memoContent.readOnly) {
+            return;
+        }
+    
+        // 리사이즈 핸들이나 메모 아이콘을 클릭한 경우 드래그하지 않음
+        if (e.target.closest('.resize-handle') || e.target.closest('.memo-icons')) {
+            return;
+        }
+    
+        e.preventDefault();
+        activeMemo = memoWrapper;
+    
+        const canvasRect = canvas.getBoundingClientRect();
+        const memoRect = memoWrapper.getBoundingClientRect();
+        memoOffsetX = (e.clientX - memoRect.left) / scale;
+        memoOffsetY = (e.clientY - memoRect.top) / scale;
+
+        document.addEventListener('mousemove', dragMemo);
+        document.addEventListener('mouseup', stopDraggingMemo);
+    }
+
+    function dragMemo(e) {
+        if (activeMemo) {
             const canvasRect = canvas.getBoundingClientRect();
             const canvasTransform = new DOMMatrix(getComputedStyle(canvasContent).transform);
             const x = (e.clientX - canvasRect.left - canvasTransform.e) / scale - memoOffsetX;
@@ -253,9 +363,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     }
 
-    function stopDragging() {
-        isDraggingCanvas = false;
-        if (activeMemo && !isContextMenuOpen) {
+    function stopDraggingMemo() {
+        if (activeMemo) {
+            document.removeEventListener('mousemove', dragMemo);
+            document.removeEventListener('mouseup', stopDraggingMemo);
             saveMemos();
             activeMemo = null;
         }
@@ -263,21 +374,22 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     function zoom(e) {
         e.preventDefault();
-
-        if (e.ctrlKey)
-            return
+    
+        if (e.ctrlKey) {
+            return;
+        }
         
         const zoomIntensity = 0.1;
         const wheel = e.deltaY < 0 ? 1 : -1;
         const zoomFactor = Math.exp(wheel * zoomIntensity);
-
+    
         const boundingRect = canvas.getBoundingClientRect();
         const x = (e.clientX - boundingRect.left) / scale;
         const y = (e.clientY - boundingRect.top) / scale;
-
+    
         const currentTransform = new DOMMatrix(getComputedStyle(canvasContent).transform);
         const newScale = currentTransform.a * zoomFactor;
-
+    
         if (newScale > 0.1 && newScale < 10) {
             const scaleDiff = newScale - currentTransform.a;
             currentTransform.a = currentTransform.d = newScale;
@@ -293,6 +405,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         saveMemos();
     }
 
+    
     function handleImageUpload(input) {
         const file = input.files[0];
         if (file && file.type.startsWith('image/')) {
@@ -302,20 +415,25 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 const imageContainer = memoWrapper.querySelector('.image-container');
                 const uploadedImage = imageContainer.querySelector('img');
                 const memoContent = memoWrapper.querySelector('.memo-content');
-                const caption = document.createElement('input');
-                caption.type = 'text';
-                caption.placeholder = 'Enter caption here';
-                caption.classList.add('caption-input');
                 
                 uploadedImage.src = e.target.result;
                 memoContent.style.display = 'none';
                 imageContainer.style.display = 'flex';
-                memoContent.value = '';
+
+                uploadedImage.draggable = false; // 이미지 드래그 방지
+                uploadedImage.addEventListener('mousedown', (e) => {
+                    e.preventDefault(); // 이미지 선택 방지
+                });
 
                 saveMemos();
             };
             reader.readAsDataURL(file);
         }
+    }
+
+    // addDragListeners 함수 추가
+    function addDragListeners(memoWrapper) {
+        memoWrapper.addEventListener('mousedown', startDraggingMemo);
     }
 
     function deleteMemo(element) {
@@ -462,37 +580,29 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const memos = Array.from(document.querySelectorAll('.memo-wrapper')).map(memo => {
             const memoContent = memo.querySelector('.memo-content');
             const imageContainer = memo.querySelector('.image-container');
-            let imageSrc = "";
-
-            if (imageContainer && imageContainer.querySelector('img').src) {
-                // 이미지가 있을 때만 src 값을 저장
-                const imgSrc = imageContainer.querySelector('img').src;
-                imageSrc = imgSrc.startsWith("data:image/") ? imgSrc : "";
-            }
-
+            const memoElement = memo.querySelector('.memo');
+            
             return {
+                id: memo.id.replace('memo-', ''),
                 left: memo.style.left,
                 top: memo.style.top,
-                width: memo.querySelector('.memo').style.width,
-                height: memo.querySelector('.memo').style.height,
-                backgroundColor: memo.querySelector('.memo').style.backgroundColor,
+                width: memoElement.style.width,
+                height: memoElement.style.height,
+                backgroundColor: memoElement.style.backgroundColor,
                 content: memoContent.value,
-                imageSrc: imageSrc, // 이미지가 없으면 빈 문자열을 저장
-                zIndex: memo.style.zIndex // z-index 값 저장 (기본값 1)
+                imageSrc: imageContainer.style.display !== 'none' ? imageContainer.querySelector('img').src : '',
+                zIndex: memo.style.zIndex || '1'
             };
         });
-
-        // 데이터 로컬 저장 방식
-        localStorage.setItem('memos', JSON.stringify(memos));
-
-        // 객체를 JSON 문자열로 변환하고 URL 인코딩
-        // const memoData = encodeURIComponent(JSON.stringify(memos));
-        // window.location.hash = memoData;
-
-        // 객체를 JSON 문자열로 변환하고 URL 인코딩 + 압축
-        // const encodedData = compressAndEncode(memos);
-        // window.location.hash = encodedData;
+    
+        try {
+            localStorage.setItem('memos', JSON.stringify(memos));
+        } catch (error) {
+            console.error('Failed to save memos:', error);
+            alert('Failed to save memos. Local storage might be full.');
+        }
     }
+    
 
 
 
@@ -510,95 +620,23 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 
     function loadMemos() {
-        // 데이터 로컬 로드 방식
-        const savedMemos = JSON.parse(localStorage.getItem('memos'));
-
-        //const memoData = window.location.hash.substring(1); // 해시(#) 부분의 데이터를 가져옴
-        //if (memoData) {
-        //    // const savedMemos = JSON.parse(decodeURIComponent(memoData)); // 압축 X
-        //    const savedMemos = decodeAndDecompress(memoData);
-
-            if (savedMemos) {
+        try {
+            const savedMemos = JSON.parse(localStorage.getItem('memos'));
+            if (savedMemos && Array.isArray(savedMemos)) {
+                // 기존 메모 모두 제거
+                const existingMemos = document.querySelectorAll('.memo-wrapper');
+                existingMemos.forEach(memo => memo.remove());
+    
+                // 저장된 메모 로드
                 savedMemos.forEach(memoData => {
-                    const memoWrapper = document.createElement('div');
-                    memoWrapper.className = 'memo-wrapper';
-                    memoWrapper.style.left = memoData.left;
-                    memoWrapper.style.top = memoData.top;
-                    memoWrapper.style.zIndex = memoData.zIndex; // z-index 값 로드
-
-                    const memoId = Date.now();
-                    memoWrapper.innerHTML = `
-                        <div class="memo-icons">
-                            <div class="color-icon" style="background-color: #ffff99;" onclick="changeColor(this, '#ffff99')"></div>
-                            <div class="color-icon" style="background-color: #ffcccb;" onclick="changeColor(this, '#ffcccb')"></div>
-                            <div class="color-icon" style="background-color: #ffffe0;" onclick="changeColor(this, '#ffffe0')"></div>
-                            <div class="color-icon" style="background-color: #e0ffff;" onclick="changeColor(this, '#e0ffff')"></div>
-                            <div class="color-icon" style="background-color: #98fb98;" onclick="changeColor(this, '#98fb98')"></div>
-                            <div class="color-icon" style="background-color: #dda0dd;" onclick="changeColor(this, '#dda0dd')"></div>
-                            <label for="image-upload-${memoId}" class="icon">🖼️</label>
-                            <input id="image-upload-${memoId}" type="file" accept="image/*" style="display: none;" onchange="handleImageUpload(this)">
-                            <div class="icon" onclick="deleteMemo(this)">✖️</div>
-                        </div>
-                        <div class="memo" style="width: ${memoData.width}; height: ${memoData.height}; background-color: ${memoData.backgroundColor || '#ffff99'};">
-                            <textarea class="memo-content" readonly>${memoData.content}</textarea>
-                            <div class="image-container" style="display: ${memoData.imageSrc ? 'flex' : 'none'}">
-                                <img src="${memoData.imageSrc}" alt="Uploaded image">
-                            </div>
-                        </div>
-                        <div class="resize-handle">⤡</div>
-                    `;
-                    canvasContent.appendChild(memoWrapper);
-
-                    // 이미지가 있는 경우 텍스트 필드를 숨김
-                    const memoContent = memoWrapper.querySelector('.memo-content');
-                    const imageContainer = memoWrapper.querySelector('.image-container');
-                    const uploadedImage = imageContainer.querySelector('img');
-
-                    if (memoData.imageSrc) {
-                        uploadedImage.src = memoData.imageSrc; // 이미지 소스 설정
-                        memoContent.style.display = 'none'; // 텍스트 숨기기
-                        imageContainer.style.display = 'flex'; // 이미지 컨테이너 표시
-                    } else {
-                        imageContainer.style.display = 'none'; // 이미지가 없으면 숨기기
-                        uploadedImage.src = ""; // 이미지 소스 초기화
-                        memoContent.style.display = 'block'; // 텍스트 표시
-                    }
-
-                    // 마우스 이벤트 추가
-                    memoWrapper.addEventListener('mouseenter', () => {
-                        memoWrapper.querySelector('.memo-icons').style.display = 'flex';
-                        memoWrapper.querySelector('.resize-handle').style.display = 'flex';
-                    });
-
-                    memoWrapper.addEventListener('mouseleave', () => {
-                        memoWrapper.querySelector('.memo-icons').style.display = 'none';
-                        memoWrapper.querySelector('.resize-handle').style.display = 'none';
-                    });
-
-                    document.addEventListener('wheel', function(e) {
-                        if (e.ctrlKey) {
-                            e.preventDefault();
-                            const memoContent = document.querySelector('.memo-content:focus');
-                            if (memoContent) {
-                                const currentSize = parseInt(window.getComputedStyle(memoContent).fontSize);
-                                const newSize = e.deltaY < 0 ? currentSize + 2 : currentSize - 2;
-                                memoContent.style.fontSize = `${newSize}px`;
-                            }
-                        }
-                    });
-
-                    // 기존 이벤트 리스너 추가
-                    memoWrapper.querySelector('.memo').addEventListener('mousedown', function(e) {
-                        if (e.button === 0) { // 왼쪽 마우스 버튼 클릭일 때만
-                            startDraggingMemo(e);
-                        }
-                    });
-                    memoWrapper.querySelector('.resize-handle').addEventListener('mousedown', startResizing);
-                    memoContent.addEventListener('dblclick', enableEditMode);
-                    memoContent.addEventListener('blur', disableEditMode);
+                    const memoWrapper = createMemo(parseFloat(memoData.left), parseFloat(memoData.top), memoData);
+                    addDragListeners(memoWrapper); // 여기에 드래그 리스너 추가
                 });
             }
-        //}
+        } catch (error) {
+            console.error('Failed to load memos:', error);
+            alert('Failed to load memos. Data might be corrupted.');
+        }
     }
 
     function exportMemos() {
@@ -772,4 +810,18 @@ document.addEventListener('DOMContentLoaded', (event) => {
             activeMemo = null;
         }
     });
+
+
+    // 모든 메모 초기화 함수
+    function resetAllMemos() {
+        const confirmed = confirm("Are you sure you want to delete all memos?");
+        if (confirmed) {
+            // 화면에서 모든 메모 삭제
+            const memoWrappers = document.querySelectorAll('.memo-wrapper');
+            memoWrappers.forEach(memo => memo.remove());
+
+            // 로컬 스토리지에서 메모 데이터 삭제
+            localStorage.removeItem('memos');
+        }
+    }
 });
