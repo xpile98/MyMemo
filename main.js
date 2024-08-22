@@ -12,7 +12,6 @@ let highestZIndex = 1;
 let lowestZIndex = 1;
 
 document.addEventListener('DOMContentLoaded', (event) => {
-    // 초기화 작업
     const exportButton = document.getElementById('exportButton');
     const importButton = document.getElementById('importButton');
     const importFileInput = document.getElementById('importFileInput');
@@ -21,10 +20,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const menuIcon = document.getElementById('menu-icon');
     const menu = document.getElementById('menu');
 
-    // createFloatingBar 호출
     createFloatingBar();
 
-    // 각종 버튼 및 UI 초기화
     if (exportButton) {
         exportButton.addEventListener('click', exportMemos);
     }
@@ -159,7 +156,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 <div class="icon" onclick="deleteMemo(this)">✖️</div>
             </div>
             <div class="memo">
-                <textarea class="memo-content" readonly></textarea>
+                <div class="memo-content" contenteditable="true"></div>
                 <div class="image-container">
                     <img src="" alt="Uploaded image">
                 </div>
@@ -196,12 +193,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function enableEditMode(e) {
-        e.target.readOnly = false;
         e.target.focus();
     }
 
     function disableEditMode(e) {
-        e.target.readOnly = true;
         saveMemos();
     }
 
