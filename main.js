@@ -12,6 +12,7 @@ let highestZIndex = 1;
 let lowestZIndex = 1;
 
 document.addEventListener('DOMContentLoaded', (event) => {
+    // 초기화 작업
     const exportButton = document.getElementById('exportButton');
     const importButton = document.getElementById('importButton');
     const importFileInput = document.getElementById('importFileInput');
@@ -20,22 +21,20 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const menuIcon = document.getElementById('menu-icon');
     const menu = document.getElementById('menu');
 
+    // createFloatingBar 호출
+    createFloatingBar();
+
+    // 각종 버튼 및 UI 초기화
     if (exportButton) {
         exportButton.addEventListener('click', exportMemos);
-    } else {
-        console.error("Element with ID 'exportButton' not found.");
     }
 
     if (importButton) {
         importButton.addEventListener('click', () => importFileInput.click());
-    } else {
-        console.error("Element with ID 'importButton' not found.");
     }
 
     if (importFileInput) {
         importFileInput.addEventListener('change', importMemos);
-    } else {
-        console.error("Element with ID 'importFileInput' not found.");
     }
 
     if (canvas) {
@@ -48,20 +47,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
         canvas.addEventListener('mouseup', stopDragging);
         canvas.addEventListener('mouseleave', stopDragging);
         canvas.addEventListener('wheel', zoom);
-    } else {
-        console.error("Element with ID 'canvas' not found.");
     }
 
     if (canvasContent) {
         canvasContent.addEventListener('dblclick', handleDoubleClick);
-    } else {
-        console.error("Element with ID 'canvas-content' not found.");
     }
 
     if (menuIcon) {
         menuIcon.addEventListener('click', toggleMenu);
-    } else {
-        console.error("Element with ID 'menu-icon' not found.");
     }
 
     if (menu) {
@@ -75,16 +68,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
             setCanvasOrientation(this.value);
         });
         document.getElementById('applySizeButton').addEventListener('click', resizeCanvas);
-    } else {
-        console.error("Element with ID 'menu' not found.");
     }
 
     // 함수들을 전역 스코프에 노출
     window.changeColor = changeColor;
     window.handleImageUpload = handleImageUpload;
     window.deleteMemo = deleteMemo;
-
-    createFloatingBar();
 
     function createFloatingBar() {
         const floatingBar = document.createElement('div');
@@ -110,14 +99,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
             const memoContent = e.target.closest('.memo-content');
             if (selectedText.length > 0 && memoContent) {
                 const rect = window.getSelection().getRangeAt(0).getBoundingClientRect();
-                floatingBar.style.top = `${rect.top + window.scrollY - floatingBar.offsetHeight - 10}px`;
+                floatingBar.style.top = `${rect.bottom + window.scrollY + 5}px`;
                 floatingBar.style.left = `${rect.left + window.scrollX}px`;
                 floatingBar.style.display = 'block';
             } else {
                 floatingBar.style.display = 'none';
             }
         });
-        
+
         document.getElementById('font-select').addEventListener('change', function() {
             document.execCommand('fontName', false, this.value);
         });
