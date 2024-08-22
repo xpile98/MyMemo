@@ -84,6 +84,57 @@ document.addEventListener('DOMContentLoaded', (event) => {
     window.handleImageUpload = handleImageUpload;
     window.deleteMemo = deleteMemo;
     
+    function createFloatingBar() {
+        const floatingBar = document.createElement('div');
+        floatingBar.id = 'floating-bar';
+        floatingBar.style.position = 'absolute';
+        floatingBar.style.display = 'none';
+        floatingBar.innerHTML = `
+            <select id="font-select">
+                <option value="Arial">Arial</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Georgia">Georgia</option>
+            </select>
+            <input type="color" id="color-picker">
+            <input type="color" id="highlight-picker">
+            <button id="bold-btn">B</button>
+            <button id="strike-btn">S</button>
+        `;
+        document.body.appendChild(floatingBar);
+        
+        document.addEventListener('mouseup', (e) => {
+            const selectedText = window.getSelection().toString();
+            if (selectedText.length > 0) {
+                floatingBar.style.top = `${e.pageY - 50}px`;
+                floatingBar.style.left = `${e.pageX}px`;
+                floatingBar.style.display = 'block';
+            } else {
+                floatingBar.style.display = 'none';
+            }
+        });
+        
+        document.getElementById('font-select').addEventListener('change', function() {
+            document.execCommand('fontName', false, this.value);
+        });
+        
+        document.getElementById('color-picker').addEventListener('change', function() {
+            document.execCommand('foreColor', false, this.value);
+        });
+        
+        document.getElementById('highlight-picker').addEventListener('change', function() {
+            document.execCommand('backColor', false, this.value);
+        });
+        
+        document.getElementById('bold-btn').addEventListener('click', function() {
+            document.execCommand('bold');
+        });
+        
+        document.getElementById('strike-btn').addEventListener('click', function() {
+            document.execCommand('strikeThrough');
+        });
+    }
+    
+    document.addEventListener('DOMContentLoaded', createFloatingBar);
 
     function handleDoubleClick(e) {
         if (e.target === canvasContent) {
@@ -139,6 +190,19 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const memoContent = memoWrapper.querySelector('.memo-content');
         memoContent.addEventListener('dblclick', enableEditMode);
         memoContent.addEventListener('blur', disableEditMode);
+
+        document.addEventListener('wheel', function(e) {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                const memoContent = document.querySelector('.memo-content:focus');
+                if (memoContent) {
+                    const currentSize = parseInt(window.getComputedStyle(memoContent).fontSize);
+                    const newSize = e.deltaY < 0 ? currentSize + 2 : currentSize - 2;
+                    memoContent.style.fontSize = `${newSize}px`;
+                }
+            }
+        });
+        
 
         saveMemos();
     }
@@ -251,6 +315,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 const imageContainer = memoWrapper.querySelector('.image-container');
                 const uploadedImage = imageContainer.querySelector('img');
                 const memoContent = memoWrapper.querySelector('.memo-content');
+                const caption = document.createElement('input');
+                caption.type = 'text';
+                caption.placeholder = 'Enter caption here';
+                caption.classList.add('caption-input');
                 
                 uploadedImage.src = e.target.result;
                 memoContent.style.display = 'none';
@@ -518,6 +586,18 @@ document.addEventListener('DOMContentLoaded', (event) => {
                     memoWrapper.addEventListener('mouseleave', () => {
                         memoWrapper.querySelector('.memo-icons').style.display = 'none';
                         memoWrapper.querySelector('.resize-handle').style.display = 'none';
+                    });
+
+                    document.addEventListener('wheel', function(e) {
+                        if (e.ctrlKey) {
+                            e.preventDefault();
+                            const memoContent = document.querySelector('.memo-content:focus');
+                            if (memoContent) {
+                                const currentSize = parseInt(window.getComputedStyle(memoContent).fontSize);
+                                const newSize = e.deltaY < 0 ? currentSize + 2 : currentSize - 2;
+                                memoContent.style.fontSize = `${newSize}px`;
+                            }
+                        }
                     });
 
                     // 기존 이벤트 리스너 추가
