@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 const memoContent = document.querySelector('.memo-content:focus');
                 if (memoContent) {
                     const currentSize = parseInt(window.getComputedStyle(memoContent).fontSize);
-                    const newSize = e.deltaY < 0 ? currentSize + 2 : currentSize - 2;
+                    const newSize = e.deltaY < 0 ? currentSize + 1 : currentSize - 1;
                     memoContent.style.fontSize = `${newSize}px`;
                 }
             }
@@ -279,6 +279,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function zoom(e) {
+        if (e.ctrlKey)
+            return
+        
         e.preventDefault();
         const zoomIntensity = 0.1;
         const wheel = e.deltaY < 0 ? 1 : -1;
