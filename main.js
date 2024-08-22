@@ -279,10 +279,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function zoom(e) {
+        e.preventDefault();
+        
         if (e.ctrlKey)
             return
         
-        e.preventDefault();
         const zoomIntensity = 0.1;
         const wheel = e.deltaY < 0 ? 1 : -1;
         const zoomFactor = Math.exp(wheel * zoomIntensity);
